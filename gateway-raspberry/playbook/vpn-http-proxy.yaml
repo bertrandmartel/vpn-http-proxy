@@ -1,0 +1,25 @@
+---
+- name: Raspberry PI Openvpn client
+  hosts: vpn_client
+  vars:
+    ansible_python_interpreter: python3
+    vpn_server_host: 
+  vars_files:
+  gather_facts: true
+  become: true
+  pre_tasks:
+    - name: Allow release-info to change for APT repositories
+      command: apt-get update -y --allow-releaseinfo-change
+    - name: Install openvpn
+      apt:
+        name: openvpn
+    - name: Install squid
+      apt:
+        name: squid
+    - name: Install nodejs
+      shell: wget https://nodejs.org/dist/latest-v10.x/node-v10.24.1-linux-armv6l.tar.xz && tar -xJf node-v10.24.1-linux-armv6l.tar.xz && cd node-v10.24.1-linux-armv6l/ && cp -R * /usr/local/
+
+  roles:
+    - openvpn
+    - squid
+    - api_proxy

@@ -1,0 +1,47 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: service
+  name: vpn-client-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vpn-client
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: service
+        app: vpn-client
+    spec:
+      volumes:
+        - name: secret-volume
+          secret:
+            secretName: vpn-client-openvpn-secret
+        - name: tun-device
+          hostPath:
+            path: /dev/net/tun
+      containers:
+        - name: vpn-client
+          image: {{ .Values.vpnClientImage }}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3128
+            - containerPort: 8080
+          securityContext:
+            capabilities:
+              add: ["NET_ADMIN"]
+          volumeMounts:
+          - name: secret-volume
+            readOnly: true
+            mountPath: "/etc/secrets"
+          - mountPath: /dev/net/tun
+            readOnly: true
+            name: tun-device
+          env:
+            - name: AWS_REGION
+              value: {{ .Values.region }}
+            - name: VPN_SERVER_HOST
+              value: {{ .Values.vpnServerHost }}

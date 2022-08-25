@@ -1,0 +1,14 @@
+---
+- name: prevent other ssm association from running apt
+  shell: pkill apt
+  ignore_errors: yes
+- name: install epel repo
+  shell: amazon-linux-extras install -y epel
+- name: Install the latest version of Openvpn
+  yum:
+    name: openvpn
+    state: latest
+- name: Install netcat
+  yum:
+    name: nc
+    state: latest

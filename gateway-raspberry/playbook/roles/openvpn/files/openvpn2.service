@@ -1,0 +1,13 @@
+[Unit]
+Description=OpenVPN Setup Script 
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+RemainAfterExit=yes
+ExecStart=/bin/vpn.sh
+ExecStop=/bin/vpn-stop.sh
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,4 @@
+vpnClientImage: xxx.dkr.ecr.xxx.amazonaws.com/xxx:latest
+vpnClientSecret: some-client-secret
+vpnServerHost: vpn.example.com
+region: xxx

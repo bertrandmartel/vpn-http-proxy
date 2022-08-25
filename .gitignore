@@ -1,0 +1,19 @@
+easy-rsa/easy-rsa-src
+gateway-config
+
+# Local .terraform directories
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+
+aws-vpn-server/gateway.conf.tfpl
+aws-vpn-server/playbook.zip
+
+terraform.prod.tfvars
+values-prod.yml
+
+**/node_modules/*
+
+*.zip

@@ -1,0 +1,112 @@
+---
+- name: Open VPN server configuration
+  copy:
+    src: server.conf
+    dest: /etc/openvpn/server.conf
+    owner: root
+    group: root
+    mode: "0644"
+- name: Open VPN server run script
+  copy:
+    src: vpn.sh
+    dest: /bin/vpn.sh
+    owner: root
+    group: root
+    mode: "0755"
+- name: Open VPN server stop script
+  copy:
+    src: vpn-stop.sh
+    dest: /bin/vpn-stop.sh
+    owner: root
+    group: root
+    mode: "0755"
+- name: Open VPN service
+  copy:
+    src: openvpn.service
+    dest: /etc/systemd/system/openvpn.service
+    owner: root
+    group: root
+    mode: "0644"
+- name: healthcheck stop script
+  copy:
+    src: healthcheck-stop.sh
+    dest: /bin/healthcheck-stop.sh
+    owner: root
+    group: root
+    mode: "0755"
+- name: healthcheck run script
+  copy:
+    src: healthcheck-run.sh
+    dest: /bin/healthcheck-run.sh
+    owner: root
+    group: root
+    mode: "0755"
+- name: healthcheck script
+  copy:
+    src: healthcheck.sh
+    dest: /bin/healthcheck.sh
+    owner: root
+    group: root
+    mode: "0755"
+- name: Healthcheck service
+  copy:
+    src: healthcheck.service
+    dest: /etc/systemd/system/healthcheck.service
+    owner: root
+    group: root
+    mode: "0644"
+- name: lookup vpn keys in aws secretsmanager
+  set_fact:
+    ca_cert: "{{ lookup('aws_secret', vpn_keys_server_secret_name, region=ansible_ec2_placement_region) | from_json | json_query('ca_cert') }}"
+    public_cert: "{{ lookup('aws_secret', vpn_keys_server_secret_name, region=ansible_ec2_placement_region) | from_json | json_query('public_cert') }}"
+    private_cert: "{{ lookup('aws_secret', vpn_keys_server_secret_name, region=ansible_ec2_placement_region) | from_json | json_query('private_cert') }}"
+    dh: "{{ lookup('aws_secret', vpn_keys_server_secret_name, region=ansible_ec2_placement_region) | from_json | json_query('dh') }}"
+  no_log: True
+- name: store CA vpn cert into /etc/openvpn
+  local_action: 
+    module: copy 
+    content: "{{ ca_cert | b64decode }}"
+    dest: /etc/openvpn/ca.crt
+- name: store public server vpn cert into /etc/openvpn
+  local_action: 
+    module: copy 
+    content: "{{ public_cert | b64decode }}"
+    dest: /etc/openvpn/server.crt
+- name: store private server vpn cert into /etc/openvpn
+  local_action: 
+    module: copy 
+    content: "{{ private_cert | b64decode }}"
+    dest: /etc/openvpn/server.key
+- name: store dh key into /etc/openvpn
+  local_action: 
+    module: copy 
+    content: "{{ dh | b64decode }}"
+    dest: /etc/openvpn/dh2048.pem
+- name: create ccd directory under /etc/openvpn
+  file:
+    path: /etc/openvpn/ccd
+    state: directory
+- name: copy aws_client ccd config
+  copy:
+    src: ccd-aws_client
+    dest: /etc/openvpn/ccd/aws_client
+    owner: root
+    group: root
+    mode: "0644"
+- name: copy gateway_client ccd config
+  copy:
+    src: ccd-gateway_client
+    dest: /etc/openvpn/ccd/gateway_client
+    owner: root
+    group: root
+    mode: "0644"
+- name: Enable service openvpn
+  systemd:
+    name: openvpn
+    enabled: yes
+    state: started
+- name: Enable service healthcheck
+  systemd:
+    name: healthcheck
+    enabled: yes
+    state: started 

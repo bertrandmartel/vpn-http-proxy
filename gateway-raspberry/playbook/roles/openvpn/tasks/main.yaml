@@ -1,0 +1,49 @@
+---
+- name: Open VPN client configuration
+  template:
+    src: client.conf.j2
+    dest: /etc/openvpn/client.conf
+    mode: '0755'
+- name: Open VPN server run script
+  copy:
+    src: vpn.sh
+    dest: /bin/vpn.sh
+    owner: root
+    group: root
+    mode: "0755"
+- name: Open VPN server stop script
+  copy:
+    src: vpn-stop.sh
+    dest: /bin/vpn-stop.sh
+    owner: root
+    group: root
+    mode: "0755"
+- name: Open VPN service
+  copy:
+    src: openvpn2.service
+    dest: /etc/systemd/system/openvpn2.service
+    owner: root
+    group: root
+    mode: "0644"
+- name: store CA vpn cert into /etc/openvpn
+  copy:
+    content: "{{ lookup('file', '{{ playbook_dir }}/../../easy-rsa/easy-rsa-src/pki/ca.crt') }}"
+    dest: /etc/openvpn/ca.crt
+- name: store public vpn cert into /etc/openvpn
+  copy:
+    content: "{{ lookup('file', '{{ playbook_dir }}/../../easy-rsa/easy-rsa-src/pki/issued/gateway_client.crt') }}"
+    dest: /etc/openvpn/client.crt
+- name: store private vpn cert into /etc/openvpn
+  copy:
+    content: "{{ lookup('file', '{{ playbook_dir }}/../../easy-rsa/easy-rsa-src/pki/private/gateway_client.key') }}"
+    dest: /etc/openvpn/client.key
+- name: Disable service openvpn
+  systemd:
+    name: openvpn
+    enabled: no
+    state: stopped
+- name: Enable service openvpn2
+  systemd:
+    name: openvpn2
+    enabled: yes
+    state: started

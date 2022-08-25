@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vpn-http-proxy-service
+spec:
+  selector:
+    app: vpn-client
+  type: NodePort
+  ports:
+  - name: http-proxy
+    port: 3128
+    targetPort: 3128
+  - name: api-server-http-proxy
+    port: 8080
+    targetPort: 8080

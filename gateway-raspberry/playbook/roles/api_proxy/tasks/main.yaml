@@ -1,0 +1,43 @@
+---
+- name: API server run script
+  copy:
+    src: api-server.sh
+    dest: /bin/api-server.sh
+    owner: root
+    group: root
+    mode: "0755"
+- name: API server stop script
+  copy:
+    src: api-server-stop.sh
+    dest: /bin/api-server-stop.sh
+    owner: root
+    group: root
+    mode: "0755"
+- name: API server service
+  copy:
+    src: api-server.service
+    dest: /etc/systemd/system/api-server.service
+    owner: root
+    group: root
+    mode: "0644"
+- name: Creates server directory
+  file:
+    path: /etc/server
+    state: directory
+- name: api-proxy
+  copy:
+    src: api-server-proxy.zip
+    dest: /etc/server/api-server-proxy.zip
+    owner: root
+    group: root
+    mode: "0644"
+- name: unzip api server code
+  unarchive:
+    src: /etc/server/api-server-proxy.zip
+    dest: /etc/server
+    remote_src: yes
+- name: Enable service api-server
+  systemd:
+    name: api-server
+    enabled: yes
+    state: restarted
