@@ -33,7 +33,7 @@ All the call will be proxified to the Raspberry PI's Internet connection.
 
 This solution is based on [this Unix stackexchange post](https://unix.stackexchange.com/a/490641/146783)
 
-If you need transparent proxy, you can use nginx reverse proxy port with the following API:
+If you need a transparent proxy, you can use the nginx reverse proxy service with the following API:
 
 * GET
 
@@ -65,7 +65,7 @@ Content-Type: application/json
   }
 }
 ```
-This API is useful for calls that don't support `CONNECT` http method, and it doesn't require to use NAT to redirect traffic on the vpn client pod or via the vpn connection directly.
+This API is useful for API calls that don't support `CONNECT` http method, and it doesn't require to use NAT to redirect traffic on the vpn client pod or via the vpn connection directly.
 
 ## Project structure
 
