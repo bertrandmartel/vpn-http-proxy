@@ -1,5 +1,10 @@
 data "aws_subnet" "vpn" {
-  id = var.private_subnet
+  id = var.public_subnet
+}
+
+resource "aws_eip" "vpn" {
+  instance = aws_instance.vpn.id
+  vpc      = true
 }
 
 resource "aws_instance" "vpn" {
@@ -9,7 +14,7 @@ resource "aws_instance" "vpn" {
   iam_instance_profile   = var.instance_profile.id
   subnet_id              = data.aws_subnet.vpn.id
   tags = merge(var.common_tags, {
-    Name        = var.vpn_client ? "${var.prefix}-vpn-client" : "${var.prefix}-vpn-server"
+    Name        = var.vpn_server_ec2_name
     vpn_client  = var.vpn_client ? "True" : "False"
     aws_wan_vpn = "True"
     vpn_http_proxy = "True"

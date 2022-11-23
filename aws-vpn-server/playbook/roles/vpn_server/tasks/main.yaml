@@ -93,6 +93,13 @@
     owner: root
     group: root
     mode: "0644"
+- name: copy test_client ccd config
+  copy:
+    src: ccd-test_client
+    dest: /etc/openvpn/ccd/test_client
+    owner: root
+    group: root
+    mode: "0644"
 - name: copy gateway_client ccd config
   copy:
     src: ccd-gateway_client

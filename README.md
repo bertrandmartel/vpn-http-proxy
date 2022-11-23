@@ -1,8 +1,7 @@
-# VPN HTTP proxy
+# OpenVPN through client gateway
 
-From a Kubernetes cluster on AWS, the idea is to get Internet access through a local Raspberry PI connection rather than through AWS Internet Gateway using an HTTP proxy from an OpenVPN server/client:
-
-![architecture](architecture/vpn-http-proxy.png)
+* The main idea is to get Internet access through a local Raspberry PI (as gateway) using an OpenVPN server hosted on AWS.
+* [TODO] use vpn connection on a subnet using custom nat instance
 
 This project implements all parts of this architecture:
 
@@ -11,72 +10,20 @@ This project implements all parts of this architecture:
   * a Classic Load Balancer
 * Raspberry PI resources:
   * an OpenVPN client
-  * a Squid HTTP proxy
-  * a custom API server written in nodejs to proxify API call (transparent proxy)
 * Kubernetes resources (helm):
-  * a pod running in a Kubernetes cluster with :
-    * openvpn client
-    * a second Squid HTTP proxy which proxifies calls to Raspberry PI's HTTP proxy
-    * nginx reverse proxy for the api proxy server
-  * a kubernetes service redirecting the Squid port and nginx port
+  * a pod running in a Kubernetes cluster with openvpn client
 
 Keys are generated using [Easy RSA v3](https://community.openvpn.net/openvpn/wiki/EasyRSA3-OpenVPN-Howto) 
-
-Then, you just need to use the newly created kubernetes service `vpn-http-proxy-service` on port `3128` as HTTP proxy. For example:
-
-```bash
-export HTTP_PROXY=http://vpn-http-proxy-service:3128
-export HTTPS_PROXY=http://vpn-http-proxy-service:3128
-```
-
-All the call will be proxified to the Raspberry PI's Internet connection.
-
-This solution is based on [this Unix stackexchange post](https://unix.stackexchange.com/a/490641/146783)
-
-If you need a transparent proxy, you can use the nginx reverse proxy service with the following API:
-
-* GET
-
-```bash
-POST http://vpn-http-proxy-service:8080
-Content-Type: application/json
-
-{
-  "method": "GET",
-  "url": "https://google.com",
-  "headers": {
-    "headerName": "headerValue"
-  }
-}
-```
-* POST
-
-```bash
-POST http://vpn-http-proxy-service:8080
-Content-Type: application/json
-
-{
-  "method": "POST",
-  "url": "https://example.com"
-  "data": "{\"field\":\"value\"}",
-  "headers": {
-    "Content-Type": "application/json",
-    "headerName": "headerValue"
-  }
-}
-```
-This API is useful for API calls that don't support `CONNECT` http method, and it doesn't require to use NAT to redirect traffic on the vpn client pod or via the vpn connection directly.
 
 ## Project structure
 
 | directory | description |
 |---------|-------|
-| aws-vpn-kube-client | helm chart for Open VPN client / Squid HTTP proxy |
+| aws-vpn-kube-client | helm chart for Open VPN client |
 | aws-vpn-server | terraform project for deploying OpenVPN server / classic load balancer / AWS secrets... |
-| docker-image | docker build of the Open VPN client / Squid docker image |
+| docker-image | docker build of the Open VPN client |
 | easy-rsa | easy rsa scripts used to generate open vpn certificates | 
-| api-server-proxy | API http proxy server written in NodeJS |
-| gateway-raspberry | ansible playbook used to provision openvpn client, squid & api server on the Raspberry PI |
+| gateway-raspberry | ansible playbook used to provision openvpn client on the Raspberry PI |
 
 ## 1 - Generate OpenVPN keys :key:
 
@@ -99,30 +46,6 @@ terraform -chdir=aws-vpn-server/ init
 terraform -chdir=aws-vpn-server/ plan -var-file="../terraform.tfvars"
 terraform -chdir=aws-vpn-server/ apply -var-file="../terraform.tfvars"
 ```
-
-## 3 - Build & Deploy vpn client docker image :whale2:
-
-Build the docker image under `docker-image`, and push it to your favorite docker registry
-
-```bash
-cd docker-image
-docker build . -t vpn-http-proxy
-docker tag vpn-http-proxy some-repo
-docker push some-repo
-```
-
-An example for AWS ECR:
-
-```bash
-cd docker-image
-docker build . -t vpn-http-proxy
-aws ecr create-repository --repository-name vpn-http-proxy
-repo=$(aws ecr describe-repositories --repository-names vpn-http-proxy | jq -r '.repositories[0].repositoryUri')
-docker tag vpn-http-proxy $repo
-aws ecr get-login-password | docker login -u AWS --password-stdin $repo
-docker push $repo
-```
-
 ## 4 - Deploy helm chart on your kubernetes cluster
 
 * Update `values.yml` in `aws-vpn-kube-client/values.yml`
@@ -148,8 +71,8 @@ On Raspberry PI:
 Then:
 
 ```bash
-./package_api_server.sh
-ansible-playbook -i ./gateway-raspberry/hosts -e "vpn_server_host=changeme.example.com"  ./gateway-raspberry/playbook/vpn-http-proxy.yaml
+export ANSIBLE_HOST_KEY_CHECKING=False
+ansible-playbook -i ./gateway-raspberry/hosts -e "vpn_server_host=changeme.example.com"  ./gateway-raspberry/playbook/vpn.yaml --ask-pass
 ```
 
 ## Debug
@@ -174,3 +97,23 @@ ansible-playbook -i localhost -c local -v -e "SSM=True aws_region=eu-west-3 vpn_
 ssh -i ../easy-rsa/easy-rsa-src/ssh/ec2_ssh pi@raspberrypi.local
 ```
 
+## OpenVPN custom thing
+
+On Raspberry PI, the ansible playbook takes the following into account:
+
+* enable ip forwarding
+```bash
+echo 1 > /proc/sys/net/ipv4/ip_forward
+```
+
+* add necessary postrouting iptable rule
+
+```bash
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+```
+
+To show current nat iptables rules:
+
+```bash
+iptables -nvL -t nat
+```

@@ -16,4 +16,6 @@ variable "route53_identifier" {
   default     = "secure"
   type        = string
 }
-variable "load_balancer" {}
+variable "public_ip" {
+  type = string
+}

@@ -22,6 +22,12 @@ data "local_sensitive_file" "aws_client_public_cert" {
 data "local_sensitive_file" "aws_client_private_cert" {
   filename = "${path.module}/../../easy-rsa/easy-rsa-src/pki/private/aws_client.key"
 }
+data "local_sensitive_file" "test_client_public_cert" {
+  filename = "${path.module}/../../easy-rsa/easy-rsa-src/pki/issued/test_client.crt"
+}
+data "local_sensitive_file" "test_client_private_cert" {
+  filename = "${path.module}/../../easy-rsa/easy-rsa-src/pki/private/test_client.key"
+}
 
 resource "aws_secretsmanager_secret" "vpn_keys_client_secret" {
   name                    = var.vpn_keys_client_secret_name
@@ -65,6 +71,23 @@ resource "local_sensitive_file" "gateway_public_cert" {
 resource "local_sensitive_file" "gateway_private_cert" {
   content         = data.local_sensitive_file.gateway_client_private_cert.content
   filename        = "${path.module}/../../gateway-config/gateway.key"
+  file_permission = "0644"
+}
+
+# copy test certificate to test-config directory
+resource "local_sensitive_file" "test_ca_cert" {
+  content         = data.local_sensitive_file.ca_cert.content
+  filename        = "${path.module}/../../test-config/ca.crt"
+  file_permission = "0644"
+}
+resource "local_sensitive_file" "test_public_cert" {
+  content         = data.local_sensitive_file.test_client_public_cert.content
+  filename        = "${path.module}/../../test-config/gateway.crt"
+  file_permission = "0644"
+}
+resource "local_sensitive_file" "test_private_cert" {
+  content         = data.local_sensitive_file.test_client_private_cert.content
+  filename        = "${path.module}/../../test-config/gateway.key"
   file_permission = "0644"
 }
 

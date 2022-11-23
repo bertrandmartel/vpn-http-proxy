@@ -21,15 +21,10 @@ ec2_vpn_ami = "ami-0f5094faf16f004eb"
 # instance type used for open vpn server EC2
 ec2_vpn_instance_type = "t2.medium"
 
-# subnet used to run open vpn server EC2 instance
-private_subnet = "subnet-xxxxxxxxxx"
-
 # list of subnets used to instanciate classic load balancer
-public_subnets = [
-  "subnet-xxxxxxxxxx",
-  "subnet-xxxxxxxxxx",
-  "subnet-xxxxxxxxxx"
-]
+public_subnet = "subnet-xxxxxxxxxx"
+
+vpn_server_ec2_name = "vpn-server"
 
 # dns zone name (example.com)
 dns_zone = "example.com"

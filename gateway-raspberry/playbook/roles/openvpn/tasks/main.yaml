@@ -47,3 +47,19 @@
     name: openvpn2
     enabled: yes
     state: started
+- name: Enable IP forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    sysctl_set: yes
+    state: present
+    reload: yes
+- name: store iptables rules
+  copy:
+    src: iptables
+    dest: /etc/iptables/rules.v4
+    owner: root
+    group: root
+    mode: "0644"
+- name: restore iptables
+  shell: iptables-restore /etc/iptables/rules.v4

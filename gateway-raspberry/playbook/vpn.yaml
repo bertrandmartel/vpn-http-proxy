@@ -13,13 +13,8 @@
     - name: Install openvpn
       apt:
         name: openvpn
-    - name: Install squid
+    - name: Install iptables-persistent
       apt:
-        name: squid
-    - name: Install nodejs
-      shell: wget https://nodejs.org/dist/latest-v10.x/node-v10.24.1-linux-armv6l.tar.xz && tar -xJf node-v10.24.1-linux-armv6l.tar.xz && cd node-v10.24.1-linux-armv6l/ && cp -R * /usr/local/
-
+        name: iptables-persistent 
   roles:
     - openvpn
-    - squid
-    - api_proxy

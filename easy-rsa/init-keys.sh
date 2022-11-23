@@ -8,6 +8,7 @@ easy_rsa_release="$EASY_RSA_RELEASE"
 easy_rsa_var_server_name="$EASY_RSA_SERVER_NAME"
 easy_rsa_var_client_aws_name="$EASY_RSA_CLIENT_AWS_NAME"
 easy_rsa_var_client_gateway_name="$EASY_RSA_CLIENT_GATEWAY_NAME"
+easy_rsa_var_client_test_name="$EASY_RSA_CLIENT_TEST_NAME"
 
 easy_rsa_dir="easy-rsa-src"
 easy_rsa_var_file="easy-rsa-init-vars"
@@ -72,6 +73,14 @@ if [ ! -d pki/issued ] || [ ! -f pki/issued/$easy_rsa_var_client_gateway_name.cr
     ./easyrsa build-client-full $easy_rsa_var_client_gateway_name nopass >> easy_rsa.log
 else
     echo "gateway client certificate already existing on local machine"
+fi
+
+# generate test certificate
+if [ ! -d pki/issued ] || [ ! -f pki/issued/$easy_rsa_var_client_test_name.crt ] ; then
+    echo "generating test client certificate..."
+    ./easyrsa build-client-full $easy_rsa_var_client_test_name nopass >> easy_rsa.log
+else
+    echo "test client certificate already existing on local machine"
 fi
 
 if [ ! -f dh2048.pem ]; then

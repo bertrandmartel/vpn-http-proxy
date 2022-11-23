@@ -21,13 +21,9 @@ variable "ec2_vpn_instance_type" {
   description = "VPN server EC2 instance type"
   default     = "t2.medium"
 }
-variable "private_subnet" {
+variable "public_subnet" {
   type        = string
-  description = "The private subnet to deploy vpn server & vpn client to"
-}
-variable "public_subnets" {
-  type        = list(any)
-  description = "The public subnets to deploy the classic load balancer to"
+  description = "The public subnet to deploy the classic load balancer to"
 }
 variable "root_block_volume_config" {
   description = "config of the root volume of Gitlab EC2 instance"
@@ -65,5 +61,8 @@ variable "vpn_keys_server_secret_name" {
   type = string
 }
 variable "vpn_keys_client_secret_name" {
+  type = string
+}
+variable "vpn_server_ec2_name" {
   type = string
 }

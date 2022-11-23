@@ -1,7 +1,6 @@
 [vpn_client:vars]
 ansible_connection=ssh
 ansible_user=pi
-ansible_ssh_private_key_file=easy-rsa/easy-rsa-src/ssh/pi_ssh
 
 [vpn_client]
 raspberrypi.local

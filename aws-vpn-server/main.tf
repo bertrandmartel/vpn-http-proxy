@@ -19,6 +19,7 @@ module "sg" {
 # open vpn server
 module "vpn_server" {
   source                   = "./vpn"
+  vpn_server_ec2_name      = var.vpn_server_ec2_name
   vpn_client               = false
   security_group_id        = module.sg.vpn_server_sg.id
   vpc_id                   = var.vpc_id
@@ -27,7 +28,7 @@ module "vpn_server" {
   permissions_boundary     = var.permissions_boundary
   ec2_ami                  = var.ec2_vpn_ami
   ec2_instance_type        = var.ec2_vpn_instance_type
-  private_subnet           = var.private_subnet
+  public_subnet            = var.public_subnet
   common_tags              = var.common_tags
   root_block_volume_config = var.root_block_volume_config
   ca_cert_md5              = module.keys.ca_cert_md5
@@ -43,21 +44,6 @@ module "vpn_server" {
     module.ssm.aws_ssm_association,
     module.ssm.aws_ssm_document,
     module.iam.server_profile
-  ]
-}
-
-# VPN server load balancer
-module "lb" {
-  source            = "./lb"
-  prefix            = var.prefix
-  common_tags       = var.common_tags
-  public_subnets    = var.public_subnets
-  security_group_id = module.sg.vpn_server_sg.id
-  vpc_id            = var.vpc_id
-  instance_id       = module.vpn_server.instance.id
-  depends_on = [
-    module.vpn_server.instance,
-    module.sg.vpn_server_sg
   ]
 }
 
@@ -111,7 +97,7 @@ module "route53" {
   vpn_server_dns             = var.vpn_server_dns
   route53_geolocation_policy = var.route53_geolocation_policy
   route53_identifier         = var.route53_identifier
-  load_balancer              = module.lb.load_balancer
+  public_ip                  = module.vpn_server.public_ip
 }
 
 # archive of playbook to monitor changes 
@@ -131,5 +117,10 @@ data "template_file" "gateway_config" {
 resource "local_sensitive_file" "gateway_config" {
   content         = data.template_file.gateway_config.rendered
   filename        = "${path.module}/../gateway-config/gateway.conf"
+  file_permission = "0644"
+}
+resource "local_sensitive_file" "test_config" {
+  content         = data.template_file.gateway_config.rendered
+  filename        = "${path.module}/../test-config/test.conf"
   file_permission = "0644"
 }
