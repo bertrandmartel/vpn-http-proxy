@@ -17,13 +17,9 @@ resource "aws_iam_role" "vpn_server_role" {
   tags = var.common_tags
 }
 
-resource "random_id" "policy_name" {
-  byte_length = 16
-}
-
 # Instance tags policy
 resource "aws_iam_policy" "instance_tags" {
-  name        = "${var.prefix}-vpn-http-proxy-policy-tags-${random_id.policy_name.hex}"
+  name        = "${var.prefix}-vpn-policy-tags"
   path        = "/"
   description = "get the instance tags"
   policy      = <<EOF

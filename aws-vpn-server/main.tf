@@ -5,6 +5,8 @@ module "keys" {
   source                      = "./keys"
   vpn_keys_client_secret_name = var.vpn_keys_client_secret_name
   vpn_keys_server_secret_name = var.vpn_keys_server_secret_name
+  vpn_server_dns              = var.vpn_server_dns
+  vpn_clients                 = var.vpn_clients
 }
 
 # Security groups
@@ -14,6 +16,21 @@ module "sg" {
   prefix                 = var.prefix
   common_tags            = var.common_tags
   vpn_server_allowed_ips = var.vpn_server_allowed_ips
+}
+
+# VPN server load balancer
+module "lb" {
+  source            = "./lb"
+  prefix            = var.prefix
+  common_tags       = var.common_tags
+  public_subnets    = var.public_subnets
+  security_group_id = module.sg.vpn_server_sg.id
+  vpc_id            = var.vpc_id
+  instance_id       = module.vpn_server.instance.id
+  depends_on = [
+    module.vpn_server.instance,
+    module.sg.vpn_server_sg
+  ]
 }
 
 # open vpn server
@@ -105,22 +122,4 @@ data "archive_file" "playbook" {
   type        = "zip"
   source_dir  = "playbook/"
   output_path = "playbook.zip"
-}
-
-# gateway client configuration file
-data "template_file" "gateway_config" {
-  template = file("${path.module}/gateway.conf.tfpl")
-  vars = {
-    vpn_server_dns = var.vpn_server_dns
-  }
-}
-resource "local_sensitive_file" "gateway_config" {
-  content         = data.template_file.gateway_config.rendered
-  filename        = "${path.module}/../gateway-config/gateway.conf"
-  file_permission = "0644"
-}
-resource "local_sensitive_file" "test_config" {
-  content         = data.template_file.gateway_config.rendered
-  filename        = "${path.module}/../test-config/test.conf"
-  file_permission = "0644"
 }

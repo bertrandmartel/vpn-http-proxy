@@ -1,7 +1,7 @@
 client
 dev tun
 proto udp
-remote {{ vpn_server_host }} 443
+remote ${vpn_server_dns} 443
 resolv-retry infinite
 nobind
 persist-key

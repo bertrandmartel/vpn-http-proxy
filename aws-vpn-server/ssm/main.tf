@@ -95,10 +95,10 @@ locals {
 }
 
 resource "aws_ssm_association" "ssm_assoc" {
-  association_name = "${var.prefix}-vpn-http-proxy-ssm-association"
+  association_name = "${var.prefix}-vpn-ssm-association"
   name             = aws_ssm_document.ssm_doc.name
   targets {
-    key    = "tag:vpn_http_proxy"
+    key    = "tag:vpn"
     values = ["True"]
   }
   output_location {
@@ -107,7 +107,7 @@ resource "aws_ssm_association" "ssm_assoc" {
   }
   parameters = {
     ExtraVariables = join(" ", local.ssm_extra_param)
-    PlaybookFile   = "vpn-http-proxy.yaml"
+    PlaybookFile   = "vpn.yaml"
     SourceInfo     = "{\"path\":\"https://s3.${var.aws_region}.amazonaws.com/${var.playbook_bucket_name}/playbook/\"}"
     SourceType     = "S3"
     Verbose        = "-v"

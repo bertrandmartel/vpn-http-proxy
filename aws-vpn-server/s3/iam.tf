@@ -36,15 +36,11 @@ locals {
 CONFIG
 }
 
-resource "random_id" "policy_name" {
-  byte_length = 16
-}
-
 # Instance Policy S3
 resource "aws_iam_policy" "s3_policy" {
-  name        = "${var.prefix}-vpn-http-proxy-vpn-policy-s3-${random_id.policy_name.hex}"
+  name        = "${var.prefix}-vpn-vpn-policy-s3"
   path        = "/"
-  description = "Provides AWS vpn-http-proxy instances access to s3 objects/bucket"
+  description = "Provides AWS vpn instances access to s3 objects/bucket"
   policy      = <<EOF
 {
   "Version": "2012-10-17",

@@ -9,7 +9,5 @@ RUN yum update -y && \
     chmod +x /data/start.sh
 
 COPY client.conf.template /etc/openvpn/client.conf.template
-COPY squid.conf /etc/squid/squid.conf
-COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 ENTRYPOINT ["/data/start.sh"]

@@ -1,5 +1,5 @@
 ---
-- name: VPN HTTP PROXY
+- name: VPN
   hosts: localhost
   vars:
     ansible_python_interpreter: /bin/python3

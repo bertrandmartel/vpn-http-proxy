@@ -32,8 +32,10 @@ Keys are generated using [Easy RSA v3](https://community.openvpn.net/openvpn/wik
 
 ```bash
 cd easy-rsa
-./init-keys.sh
+./init-keys.sh -c aws_client,test_client
 ```
+
+`-c` list openvpn client to generate. This same list of client must appear in `vpn_clients` terraform variable in `aws-vpn-server/terraform.tfvars`
 
 ## 2 - Deploy AWS infrastructure using terraform
 

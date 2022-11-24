@@ -10,37 +10,6 @@ data "local_sensitive_file" "server_private_cert" {
 data "local_sensitive_file" "server_dh" {
   filename = "${path.module}/../../easy-rsa/easy-rsa-src/dh2048.pem"
 }
-data "local_sensitive_file" "gateway_client_public_cert" {
-  filename = "${path.module}/../../easy-rsa/easy-rsa-src/pki/issued/gateway_client.crt"
-}
-data "local_sensitive_file" "gateway_client_private_cert" {
-  filename = "${path.module}/../../easy-rsa/easy-rsa-src/pki/private/gateway_client.key"
-}
-data "local_sensitive_file" "aws_client_public_cert" {
-  filename = "${path.module}/../../easy-rsa/easy-rsa-src/pki/issued/aws_client.crt"
-}
-data "local_sensitive_file" "aws_client_private_cert" {
-  filename = "${path.module}/../../easy-rsa/easy-rsa-src/pki/private/aws_client.key"
-}
-data "local_sensitive_file" "test_client_public_cert" {
-  filename = "${path.module}/../../easy-rsa/easy-rsa-src/pki/issued/test_client.crt"
-}
-data "local_sensitive_file" "test_client_private_cert" {
-  filename = "${path.module}/../../easy-rsa/easy-rsa-src/pki/private/test_client.key"
-}
-
-resource "aws_secretsmanager_secret" "vpn_keys_client_secret" {
-  name                    = var.vpn_keys_client_secret_name
-  recovery_window_in_days = 0
-}
-resource "aws_secretsmanager_secret_version" "vpn_keys_client_secret" {
-  secret_id = aws_secretsmanager_secret.vpn_keys_client_secret.id
-  secret_string = jsonencode({
-    "ca_cert"      = base64encode(data.local_sensitive_file.ca_cert.content)
-    "public_cert"  = base64encode(data.local_sensitive_file.aws_client_public_cert.content)
-    "private_cert" = base64encode(data.local_sensitive_file.aws_client_private_cert.content)
-  })
-}
 
 resource "aws_secretsmanager_secret" "vpn_keys_server_secret" {
   name                    = var.vpn_keys_server_secret_name
@@ -57,6 +26,12 @@ resource "aws_secretsmanager_secret_version" "vpn_keys_server_secret" {
   })
 }
 
+data "local_sensitive_file" "gateway_client_public_cert" {
+  filename = "${path.module}/../../easy-rsa/easy-rsa-src/pki/issued/gateway_client.crt"
+}
+data "local_sensitive_file" "gateway_client_private_cert" {
+  filename = "${path.module}/../../easy-rsa/easy-rsa-src/pki/private/gateway_client.key"
+}
 # copy gateway certificate to gateway-config directory
 resource "local_sensitive_file" "gateway_ca_cert" {
   content         = data.local_sensitive_file.ca_cert.content
@@ -65,29 +40,66 @@ resource "local_sensitive_file" "gateway_ca_cert" {
 }
 resource "local_sensitive_file" "gateway_public_cert" {
   content         = data.local_sensitive_file.gateway_client_public_cert.content
-  filename        = "${path.module}/../../gateway-config/gateway.crt"
+  filename        = "${path.module}/../../gateway-config/client.crt"
   file_permission = "0644"
 }
 resource "local_sensitive_file" "gateway_private_cert" {
   content         = data.local_sensitive_file.gateway_client_private_cert.content
-  filename        = "${path.module}/../../gateway-config/gateway.key"
+  filename        = "${path.module}/../../gateway-config/client.key"
   file_permission = "0644"
 }
 
-# copy test certificate to test-config directory
+# gateway client configuration file
+data "template_file" "client_config" {
+  template = file("${path.module}/../client.conf.tfpl")
+  vars = {
+    vpn_server_dns = var.vpn_server_dns
+  }
+}
+resource "local_sensitive_file" "gateway_config" {
+  content         = data.template_file.client_config.rendered
+  filename        = "${path.module}/../gateway-config/client.conf"
+  file_permission = "0644"
+}
+data "local_sensitive_file" "ccd_client" {
+  filename        = "${path.module}/../ccd-client"
+}
+
+data "local_sensitive_file" "cert_files" {
+  for_each = toset(var.vpn_clients)
+  filename = "${path.module}/../../easy-rsa/easy-rsa-src/pki/issued/${each.key}.crt"
+}
+data "local_sensitive_file" "key_files" {
+  for_each = toset(var.vpn_clients)
+  filename = "${path.module}/../../easy-rsa/easy-rsa-src/pki/private/${each.key}.key"
+}
 resource "local_sensitive_file" "test_ca_cert" {
+  for_each        = toset(var.vpn_clients)
   content         = data.local_sensitive_file.ca_cert.content
-  filename        = "${path.module}/../../test-config/ca.crt"
+  filename        = "${path.module}/../../client-config/${each.key}/ca.crt"
   file_permission = "0644"
 }
-resource "local_sensitive_file" "test_public_cert" {
-  content         = data.local_sensitive_file.test_client_public_cert.content
-  filename        = "${path.module}/../../test-config/gateway.crt"
+resource "local_sensitive_file" "public_cert" {
+  for_each        = toset(var.vpn_clients)
+  content         = data.local_sensitive_file.cert_files[each.key].content
+  filename        = "${path.module}/../../client-config/${each.key}/client.crt"
   file_permission = "0644"
 }
-resource "local_sensitive_file" "test_private_cert" {
-  content         = data.local_sensitive_file.test_client_private_cert.content
-  filename        = "${path.module}/../../test-config/gateway.key"
+resource "local_sensitive_file" "private_cert" {
+  for_each        = toset(var.vpn_clients)
+  content         = data.local_sensitive_file.key_files[each.key].content
+  filename        = "${path.module}/../../client-config/${each.key}/client.key"
   file_permission = "0644"
 }
-
+resource "local_sensitive_file" "client_config" {
+  for_each        = toset(var.vpn_clients)
+  content         = data.template_file.client_config.rendered
+  filename        = "${path.module}/../../client-config/${each.key}/client.conf"
+  file_permission = "0644"
+}
+resource "local_sensitive_file" "client_ccd" {
+  for_each        = toset(var.vpn_clients)
+  content         = data.local_sensitive_file.ccd_client.content
+  filename        = "${path.module}/../playbook/roles/vpn_server/files/ccd/${each.key}"
+  file_permission = "0644"
+}

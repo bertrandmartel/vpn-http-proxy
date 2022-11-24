@@ -2,13 +2,31 @@
 
 set -e
 
+usage() { echo "Usage: $0 -c client1,client2,client3" 1>&2; exit 1; }
+
+while getopts ":c:" o; do
+    case "${o}" in
+        c)
+            client_str=${OPTARG}
+            ;;
+        *)
+            usage
+            ;;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ -z "${client_str}" ]; then
+    usage
+fi
+
+IFS=', ' read -r -a clients <<< "$client_str"
+
 . .easy-rsa
 
 easy_rsa_release="$EASY_RSA_RELEASE"
 easy_rsa_var_server_name="$EASY_RSA_SERVER_NAME"
-easy_rsa_var_client_aws_name="$EASY_RSA_CLIENT_AWS_NAME"
 easy_rsa_var_client_gateway_name="$EASY_RSA_CLIENT_GATEWAY_NAME"
-easy_rsa_var_client_test_name="$EASY_RSA_CLIENT_TEST_NAME"
 
 easy_rsa_dir="easy-rsa-src"
 easy_rsa_var_file="easy-rsa-init-vars"
@@ -61,13 +79,6 @@ else
     echo "server certificate already existing on local machine"
 fi
 
-if [ ! -d pki/issued ] || [ ! -f pki/issued/$easy_rsa_var_client_aws_name.crt ] ; then
-    echo "generating aws client certificate..."
-    ./easyrsa build-client-full $easy_rsa_var_client_aws_name nopass >> easy_rsa.log
-else
-    echo "aws client certificate already existing on local machine"
-fi
-
 if [ ! -d pki/issued ] || [ ! -f pki/issued/$easy_rsa_var_client_gateway_name.crt ] ; then
     echo "generating gateway client certificate..."
     ./easyrsa build-client-full $easy_rsa_var_client_gateway_name nopass >> easy_rsa.log
@@ -75,13 +86,16 @@ else
     echo "gateway client certificate already existing on local machine"
 fi
 
-# generate test certificate
-if [ ! -d pki/issued ] || [ ! -f pki/issued/$easy_rsa_var_client_test_name.crt ] ; then
-    echo "generating test client certificate..."
-    ./easyrsa build-client-full $easy_rsa_var_client_test_name nopass >> easy_rsa.log
-else
-    echo "test client certificate already existing on local machine"
-fi
+for client in "${clients[@]}"
+do
+   echo "checking certificate for $client..."
+    if [ ! -d pki/issued ] || [ ! -f pki/issued/$client.crt ] ; then
+        echo "generating aws client certificate..."
+        ./easyrsa build-client-full $client nopass >> easy_rsa.log
+    else
+        echo "aws client certificate already existing on local machine"
+    fi
+done
 
 if [ ! -f dh2048.pem ]; then
     openssl dhparam -out dh2048.pem 2048

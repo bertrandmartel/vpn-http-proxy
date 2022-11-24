@@ -17,7 +17,7 @@ resource "aws_instance" "vpn" {
     Name        = var.vpn_server_ec2_name
     vpn_client  = var.vpn_client ? "True" : "False"
     aws_wan_vpn = "True"
-    vpn_http_proxy = "True"
+    vpn = "True"
   })
   user_data = <<EOF
 #!/bin/bash

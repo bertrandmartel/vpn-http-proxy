@@ -1,5 +1,6 @@
 easy-rsa/easy-rsa-src
 gateway-config
+client-config
 test-config
 
 # Local .terraform directories
@@ -9,7 +10,6 @@ test-config
 *.tfstate
 *.tfstate.*
 
-aws-vpn-server/gateway.conf.tfpl
 aws-vpn-server/playbook.zip
 
 terraform.prod.tfvars

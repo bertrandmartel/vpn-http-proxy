@@ -29,9 +29,4 @@ cat $PRIVATE_CERT_FILE | base64 -d >> /etc/openvpn/client.key
 
 envsubst < /etc/openvpn/client.conf.template > /etc/openvpn/client.conf
 
-openvpn --cd /etc/openvpn --config /etc/openvpn/client.conf --script-security 2 > /var/log/openvpn.log &
-
-squid&
-nginx -g "daemon off;"&
-
-while true; do sleep 30; done;
+openvpn --cd /etc/openvpn --config /etc/openvpn/client.conf --script-security 2 > /var/log/openvpn.log

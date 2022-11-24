@@ -66,3 +66,11 @@ variable "vpn_keys_client_secret_name" {
 variable "vpn_server_ec2_name" {
   type = string
 }
+variable "public_subnets" {
+  type        = list(any)
+  description = "The public subnets to deploy the classic load balancer to"
+}
+variable "vpn_clients" {
+  type        = list(any)
+  description = "List of vpn client common name. This is the same list used in easy-rsa init-keys script"
+}

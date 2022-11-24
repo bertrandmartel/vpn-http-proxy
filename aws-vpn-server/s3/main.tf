@@ -1,12 +1,8 @@
 data "aws_caller_identity" "current" {}
 
-resource "random_id" "s3_bucket" {
-  byte_length = 16
-}
-
 # s3 playbook bucket
 resource "aws_s3_bucket" "playbook_bucket" {
-  bucket = "${var.prefix}-vpn-http-proxy-playbook-${random_id.s3_bucket.hex}"
+  bucket = "${var.prefix}-vpn-playbook"
   acl    = "private"
   versioning {
     enabled = true
@@ -27,7 +23,7 @@ resource "aws_s3_bucket" "playbook_bucket" {
     "${path.module}/s3_policy.json",
     {
       "account_id" = data.aws_caller_identity.current.account_id
-      "bucket"     = "${var.prefix}-vpn-http-proxy-playbook-${random_id.s3_bucket.hex}"
+      "bucket"     = "${var.prefix}-vpn-playbook"
     }
   )
 }

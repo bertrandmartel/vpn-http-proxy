@@ -86,20 +86,14 @@
   file:
     path: /etc/openvpn/ccd
     state: directory
-- name: copy aws_client ccd config
+- name: copy all client ccd files
   copy:
-    src: ccd-aws_client
-    dest: /etc/openvpn/ccd/aws_client
+    src: "{{ item }}"
+    dest: /etc/openvpn/ccd/
     owner: root
     group: root
     mode: "0644"
-- name: copy test_client ccd config
-  copy:
-    src: ccd-test_client
-    dest: /etc/openvpn/ccd/test_client
-    owner: root
-    group: root
-    mode: "0644"
+  with_fileglob: "files/ccd/*"
 - name: copy gateway_client ccd config
   copy:
     src: ccd-gateway_client
@@ -107,6 +101,8 @@
     owner: root
     group: root
     mode: "0644"
+- file: path={{ item }} state=absent
+  with_fileglob: /etc/openvpn/ccd/*.etag
 - name: Enable service openvpn
   systemd:
     name: openvpn
