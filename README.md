@@ -119,3 +119,46 @@ To show current nat iptables rules:
 ```bash
 iptables -nvL -t nat
 ```
+
+# iptable - port forwarding on 1 port only
+
+* Origin is the raspberry PI local IP address
+* Destination is the remote client OPENVPN IP address
+
+```bash
+ORIGIN=192.168.1.3
+DESTINATION=10.8.0.20
+PORT=9000
+
+iptables -t nat -A PREROUTING -p tcp --dport $PORT -j DNAT --to-destination $DESTINATION:$PORT
+iptables -t nat -A POSTROUTING -p tcp -d $DESTINATION --dport $PORT -j SNAT --to-source $ORIGIN
+
+iptables -t nat --list
+```
+
+# iptable - port forwarding on multiple port only
+
+* Origin is the raspberry PI local IP address
+* Destination is the remote client OPENVPN IP address
+
+```bash
+ORIGIN=192.168.1.3
+DESTINATION=10.8.0.20
+PORT_START=9000
+PORT_END=9010
+
+iptables -t nat -A PREROUTING -p tcp --match multiport --dports $PORT_START:$PORT_END -j DNAT --to-destination $DESTINATION:$PORT_START-$PORT_END
+iptables -t nat -A POSTROUTING -p tcp --match multiport -d $DESTINATION --sport $PORT_START:$PORT_END -j SNAT --to-source $ORIGIN:$PORT_START-$PORT_END
+
+iptables -t nat --list
+```
+
+# Set static address for VPN clients
+
+Edit the ccd with 
+
+```
+ifconfig-push 10.8.0.3 255.255.255.0
+```
+
+`10.8.0.3` being the client static IP address
