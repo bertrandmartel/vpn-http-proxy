@@ -21,6 +21,7 @@ module "sg" {
 # VPN server load balancer
 module "lb" {
   source            = "./lb"
+  count             = var.mode == "private" ? 1 : 0
   prefix            = var.prefix
   common_tags       = var.common_tags
   public_subnets    = var.public_subnets
@@ -36,6 +37,7 @@ module "lb" {
 # open vpn server
 module "vpn_server" {
   source                   = "./vpn"
+  is_public                = var.mode == "public"
   vpn_server_ec2_name      = var.vpn_server_ec2_name
   vpn_client               = false
   security_group_id        = module.sg.vpn_server_sg.id
@@ -45,7 +47,7 @@ module "vpn_server" {
   permissions_boundary     = var.permissions_boundary
   ec2_ami                  = var.ec2_vpn_ami
   ec2_instance_type        = var.ec2_vpn_instance_type
-  public_subnet            = var.public_subnet
+  ec2_subnet               = var.ec2_subnet
   common_tags              = var.common_tags
   root_block_volume_config = var.root_block_volume_config
   ca_cert_md5              = module.keys.ca_cert_md5
@@ -110,11 +112,14 @@ module "iam" {
 # DNS
 module "route53" {
   source                     = "./route53"
+  is_public                  = var.mode == "public"
   dns_zone                   = var.dns_zone
   vpn_server_dns             = var.vpn_server_dns
   route53_geolocation_policy = var.route53_geolocation_policy
   route53_identifier         = var.route53_identifier
   public_ip                  = module.vpn_server.public_ip
+  lb_dns_name                = var.mode == "private" ? module.lb[0].load_balancer.dns_name : null
+  lb_dns_zone_id             = var.mode == "private" ? module.lb[0].load_balancer.zone_id : null
 }
 
 # archive of playbook to monitor changes 

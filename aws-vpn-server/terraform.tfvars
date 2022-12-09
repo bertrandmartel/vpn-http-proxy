@@ -22,7 +22,7 @@ ec2_vpn_ami = "ami-0f5094faf16f004eb"
 ec2_vpn_instance_type = "t2.medium"
 
 # list of subnets used to instanciate classic load balancer
-public_subnet = "subnet-xxxxxxxxxx"
+ec2_subnet = "subnet-xxxxxxxxxx"
 
 # list of subnets used to instanciate classic load balancer
 public_subnets = [
@@ -63,3 +63,5 @@ vpn_clients = [
   "test_client",
   "aws_client"
 ]
+
+mode = "public"

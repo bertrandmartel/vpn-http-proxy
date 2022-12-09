@@ -16,10 +16,6 @@ variable "ec2_instance_type" {
   description = "VPN server EC2 instance type"
   default     = "t2.medium"
 }
-variable "public_subnet" {
-  type        = string
-  description = "The public subnet to deploy to"
-}
 variable "common_tags" {
   default     = {}
   description = "common resource tags"
@@ -63,4 +59,10 @@ variable "ssm_doc_sha" {
 }
 variable "vpn_server_ec2_name" {
   type = string
+}
+variable "ec2_subnet" {
+  type = string
+}
+variable "is_public" {
+  type = bool
 }

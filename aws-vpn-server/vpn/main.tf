@@ -1,8 +1,9 @@
 data "aws_subnet" "vpn" {
-  id = var.public_subnet
+  id = var.ec2_subnet
 }
 
 resource "aws_eip" "vpn" {
+  count = var.is_public ? 1 : 0
   instance = aws_instance.vpn.id
   vpc      = true
 }

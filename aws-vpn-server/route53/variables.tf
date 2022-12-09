@@ -19,3 +19,14 @@ variable "route53_identifier" {
 variable "public_ip" {
   type = string
 }
+variable "is_public" {
+  type = bool
+}
+variable "lb_dns_name" {
+  type = string
+  default = null
+}
+variable "lb_dns_zone_id" {
+  type = string
+  default = null
+}

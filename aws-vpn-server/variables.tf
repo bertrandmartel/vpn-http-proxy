@@ -21,9 +21,9 @@ variable "ec2_vpn_instance_type" {
   description = "VPN server EC2 instance type"
   default     = "t2.medium"
 }
-variable "public_subnet" {
+variable "ec2_subnet" {
   type        = string
-  description = "The public subnet to deploy the classic load balancer to"
+  description = "The subnet to deploy the classic load balancer to"
 }
 variable "root_block_volume_config" {
   description = "config of the root volume of Gitlab EC2 instance"
@@ -73,4 +73,7 @@ variable "public_subnets" {
 variable "vpn_clients" {
   type        = list(any)
   description = "List of vpn client common name. This is the same list used in easy-rsa init-keys script"
+}
+variable "mode" {
+  type = string
 }
