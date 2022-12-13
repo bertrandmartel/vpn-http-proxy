@@ -162,3 +162,22 @@ ifconfig-push 10.8.0.3 255.255.255.0
 ```
 
 `10.8.0.3` being the client static IP address
+
+This will work for linux client but not for windows client. On windows client, using tun on tap win32 driver will require using 255.255.255.252 subnet, eg 4 IPs available
+
+Given the following server config:
+
+```
+server 10.8.0.0 255.255.255.0
+```
+
+You will get the following ips in a `255.255.255.252` subnet:
+
+| network |  ip1   | ip2    | broadcast | ccd config |
+|---------|--------|--------|--------|---------------|
+| 10.8.0.0|10.8.0.1|10.8.0.2|10.8.0.3| ifconfig-push 10.8.0.2 10.8.0.1 |
+| 10.8.0.4|10.8.0.5|10.8.0.6|10.8.0.7| ifconfig-push 10.8.0.6 10.8.0.5 |
+....
+....
+
+It's explained in [this post on openvpn forum](https://forums.openvpn.net/viewtopic.php?t=8406)
